@@ -16,9 +16,19 @@
       </div>
 
       <!-- Todo List -->
+      <div class="flex gap-2 mb-4">
+        <button @click="filter = 'all'" class="px-3 py-1 bg-gray-200 rounded">All</button>
+
+        <button @click="filter = 'active'" class="px-3 py-1 bg-gray-200 rounded">Active</button>
+
+        <button @click="filter = 'completed'" class="px-3 py-1 bg-gray-200 rounded">
+          Completed
+        </button>
+        <p class="mb-4 text-gray-600">{{ remainingCount }} tasks remaining</p>
+      </div>
       <ul>
         <li
-          v-for="(todo, index) in todos"
+          v-for="(todo, index) in filteredTodos"
           :key="index"
           class="p-2 border-b flex justify-between items-center"
         >
@@ -38,10 +48,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const newTodo = ref('')
-const todos = ref([])
+
+const filter = ref('all')
+
+const savedTodos = localStorage.getItem('todos')
+
+const todos = ref(savedTodos ? JSON.parse(savedTodos) : [])
 
 function addTodo() {
   if (newTodo.value.trim() === '') return
@@ -57,6 +72,30 @@ function addTodo() {
 function removeTodo(index) {
   todos.value.splice(index, 1)
 }
+
+const filteredTodos = computed(() => {
+  if (filter.value === 'active') {
+    return todos.value.filter((todo) => !todo.done)
+  }
+
+  if (filter.value === 'completed') {
+    return todos.value.filter((todo) => todo.done)
+  }
+
+  return todos.value
+})
+
+const remainingCount = computed(() => {
+  return todos.value.filter((todo) => !todo.done).length
+})
+
+watch(
+  todos,
+  (newTodos) => {
+    localStorage.setItem('todos', JSON.stringify(newTodos))
+  },
+  { deep: true },
+)
 </script>
 
 <style></style>
